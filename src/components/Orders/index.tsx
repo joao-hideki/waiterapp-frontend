@@ -3,6 +3,7 @@ import { Order } from '../../types/Order';
 import { api } from '../../utils/api';
 import { OrdersBoard } from '../OrdersBoard';
 import { Container } from './styles';
+import socketIo from 'socket.io-client';
 
 export function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -10,6 +11,16 @@ export function Orders() {
   useEffect(() => {
     api.get('/orders')
       .then(({data}) => setOrders(data));
+  }, []);
+
+  useEffect(() => {
+    const socket = socketIo('http://localhost:3003', {
+      transports: ['websocket']
+    });
+
+    socket.on('orders@new', (order) => {
+      setOrders((prevState) => prevState.concat(order));
+    });
   }, []);
 
   const waiting = orders.filter((order) => order.status ==='WAITING');
